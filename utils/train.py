@@ -37,7 +37,7 @@ class Train:
         self.resize = [int(self.conf['Model']['ImageWidth']), int(self.conf['Model']['ImageHeight'])]
         self.word = self.conf['Model']['Word']
         self.ImageChannel = self.conf['Model']['ImageChannel']
-        logger.info("\nTaget:\nmin_Accuracy: {}\nmin_Epoch: {}\nmax_Loss: {}".format(self.target_acc, self.min_epoch,
+        logger.info("\nTarget:\nmin_Accuracy: {}\nmin_Epoch: {}\nmax_Loss: {}".format(self.target_acc, self.min_epoch,
                                                                                      self.max_loss))
         self.use_gpu = self.conf['System']['GPU']
         if self.use_gpu:
