@@ -26,53 +26,72 @@ class CacheData:
     def cache(self, base_path: str, search_type="name"):
         self.bath_path = base_path
         self.allow_ext = self.conf["System"]["Allow_Ext"]
-        if search_type == "name":
-            self.__get_label_from_name(base_path=base_path)
-        else:
-            self.__get_label_from_file(base_path=base_path)
+        self.__get_label_from_name(base_path=base_path)
 
     def __get_label_from_name(self, base_path: str):
-        files = os.listdir(base_path)
+        files = self.__get_relative_files_recursive(base_path)
         logger.info("\nFiles number is {}.".format(len(files)))
         self.__collect_data(files, base_path, [])
 
-    def __get_label_from_file(self, base_path: str):
-        labels_path = os.path.join(base_path, "labels.txt")
-        images_path = os.path.join(base_path, "images")
-        if not os.path.exists(labels_path):
-            logger.error("\nThe file labels.txt not found in path ----> {}".format(base_path))
-            exit()
-        if not os.path.exists(images_path) or not os.path.isdir(images_path):
-            logger.error("\nThe dir {} not found in path ----> {}".format(images_path, base_path))
-            exit()
-        files = os.listdir(images_path)
-        logger.info("\nFiles number is {}.".format(len(files)))
-        with open(labels_path, "r", encoding="utf-8") as f:
-            labels_lines = f.readlines()
-        labels_lines = [line.replace("\r", "").replace("\n", "") for line in labels_lines]
-        labels_filename_lines = [line.split("\t")[0] for line in labels_lines]
-        logger.info("\nLabels number is {}.".format(len(labels_lines)))
-        logger.info("\nChecking labels.txt ...")
-        error_files = set(labels_filename_lines).difference(set(files))
-        logger.info("\nCheck labels.txt end! {} errors!".format(len(error_files)))
-        del files
-        self.__collect_data(labels_lines, images_path, error_files, is_file=True)
+    def __get_relative_files_recursive(self, directory):
+        """
+        递归获取指定目录下所有文件（包括子目录中的文件）的相对路径。
 
-    def __collect_data(self, lines, base_path, error_files, is_file=False):
+        Args:
+            directory: 要查找的目录的绝对或相对路径。
+
+        Returns:
+            一个包含相对文件路径的列表。
+        """
+        relative_paths = []
+        for root, _, files in os.walk(directory):
+            for filename in files:
+                filepath = os.path.join(root, filename)
+                relative_path = os.path.relpath(filepath, directory)
+                relative_paths.append(relative_path)
+        return relative_paths
+
+    def __extract_label_before_underscore(self, file_path):
+        """
+        从文件路径中提取最后一个路径分隔符后、下划线前的数字加字母组合。
+        如果没有路径分隔符，则提取从字符串首字母开始到下划线前的内容。
+
+        Args:
+            file_path: 文件路径字符串。
+
+        Returns:
+            提取到的字符串，如果找不到下划线则返回整个文件名部分，
+            如果路径为空或只包含分隔符则返回空字符串。
+        """
+        if not file_path:
+            return ""
+
+        last_separator_index = file_path.rfind(os.sep)
+
+        if last_separator_index != -1:
+            # 存在路径分隔符，取最后一个分隔符之后的部分作为文件名
+            file_name = file_path[last_separator_index + 1:]
+        else:
+            # 不存在路径分隔符，整个路径作为文件名
+            file_name = file_path
+
+        underscore_index = file_name.find('_')
+
+        if underscore_index != -1:
+            return file_name[:underscore_index]
+        else:
+            return file_name
+
+    def __collect_data(self, lines, base_path, error_files):
         labels = []
         caches = []
 
         for file in tqdm.tqdm(lines):
-            if is_file:
-                line_list = file.split('\t')
-                filename = line_list[0]
-                label = line_list[1]
-            else:
-                filename = file
-                label = "_".join(filename.split("_")[:-1])
+            filename = file
+            label = self.__extract_label_before_underscore(file_path=filename)
+            # print(f'{filename}\t{label}')
             if filename in error_files:
                 continue
-            label = label.replace(" ", "")
             if filename.split('.')[-1] in self.allow_ext:
                 if " " in filename:
                     logger.warning("The {} has black. We will remove it!".format(filename))
@@ -89,7 +108,7 @@ class CacheData:
         labels = list(set(labels))
         if not self.conf['Model']['Word']:
             labels.insert(0, " ")
-        logger.info("\nCoolect labels is {}".format(json.dumps(labels, ensure_ascii=False)))
+        logger.info("\nCollected labels are {}".format(json.dumps(labels, ensure_ascii=False)))
         self.conf['System']['Path'] = base_path
         self.conf['Model']['CharSet'] = labels
         self.config.make_config(config_dict=self.conf, single=self.conf['Model']['Word'])

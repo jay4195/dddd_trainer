@@ -24,9 +24,9 @@ Macos仅支持cpu训练
 
 [cudnn](https://developer.nvidia.com/zh-cn/cudnn)
 
-注意cudnn支持的cuda版本号要与你安装的cuda版本号对应，不同版本的cuda支持的显卡不一样，<b>20系无脑选择10.2版本cuda，30系无脑选择11.3版本cuda</b>,这里有啥问题就百度吧，算是一个基础问题。
+注意cudnn支持的cuda版本号要与你安装的cuda版本号对应，不同版本的cuda支持的显卡不一样，`<b>`20系无脑选择10.2版本cuda，30系无脑选择11.3版本cuda`</b>`,这里有啥问题就百度吧，算是一个基础问题。
 
-## 2、训练部分 
+## 2、训练部分
 
 - 以下所有变量均以 {param} 格式代替，表示可根据自己需要修改，而使用时并不需要带上{}，如步骤创建新的训练项目，使用时可以直接写
 
@@ -52,76 +52,39 @@ project_name 为项目名称，尽量不要以特殊符号命名
 
 - ### 4、准备数据
 
-    项目支持两种形式的数据
-    
-    ### A、从文件名导入
-        
-    图片均在同一个文件夹中，且命名为类似，其中/root/images_set为图片所在目录，可以为任意目录地址
+  项目支持两种形式的数据
 
-    ```
-  /root/images_set/
-    |---- abcde_随机hash值.jpg
-    |---- sdae_随机hash值.jpg
-    |---- 酱闷肘子_随机hash值.jpg
-  
+  ### A、从文件名导入
+
+  图片均在同一个文件夹中，且命名为类似，其中/root/images_set为图片所在目录，可以为任意目录地址，支持该目录下递归查询所有的图片
+
+
   ```
-    
-    如下图所示
-
-    ![image](https://cdn.wenanzhe.com/img/mkGu_000001d00f140741741ed9916240d8d5.jpg)
-
-    那么图片命名可以是 
-
-    `mkGu_000001d00f140741741ed9916240d8d5.jpg`
-
-    ### 为考虑各种情况，dddd_trainer不会自动去处理大小写问题，如果想训练大小写，则在样本标注时就需要自己标注好大小写，如上面例子
-
-    ### B、从文件中导入
-
-    受限于可能样本组织形式或者特殊字符，本项目支持从txt文档中导入数据，数据集目录必须包含有`labels.txt`文件和`images`文件夹, 其中/root/images_set为图片所在目录，可以为任意目录地址
-    
-    `labels.txt`文件中包含了所有在`/root/images_set/images`目录下基于`/root/images_set/images`的图片相对路径，`/root/images_set/images`下可以有目录。
-
-    #### 当然，在这种模式下，图片的文件名随意，可以有具体label也可以没有，因为咱们不从这里获取图片的label
-
-    如下所示
-- 
-   a.images下无目录的形式
-
-    ```
   /root/images_set/
-    |---- labels.txt
-    |---- images
-          |---- 随机hash值.jpg
-          |---- 随机hash值.jpg
-          |---- 酱闷肘子_随机hash值.jpg
-  
-  labels.txt文件内容为（其中\t制表符为每行文件名与label的分隔符）
-  随机hash值.jpg\tabcd
-  随机hash值.jpg\tsdae
-  酱闷肘子_随机hash值.jpg\t酱闷肘子
-  ```
-  b.images下有目录的形式
-    ```
-  /root/images_set/
-    |---- labels.txt
-    |---- images
-          |---- aaaa
-                |---- 随机hash值.jpg
-          |---- 酱闷肘子_随机hash值.jpg
-  
-  labels.txt文件内容为（其中\t制表符为每行文件名与label的分隔符）
-  aaaa/随机hash值.jpg\tabcd
-  aaaa/随机hash值.jpg\tsdae
-  酱闷肘子_随机hash值.jpg\t酱闷肘子
-  
-  ```
-  
-  ### 为了新手更好的理解本部分的内容，本项目也提供了两套基础数据集提供测试
+  |---- abcde_随机hash值.jpg
+  |---- sdae_随机hash值.jpg
+  |---- 酱闷肘子_随机hash值.jpg
+  |---- subfolder/
+       |---- xxxx_随机hash值.png
+       |---- xxxx_随机hash值.jpeg
 
-    [数据集一](https://wwm.lanzoum.com/iUyYb0b5z3lg)
-    [数据集二](https://wwm.lanzoum.com/itczd0b5z3yj)
+  ```
+
+  如下图所示
+
+  ![image](https://cdn.wenanzhe.com/img/mkGu_000001d00f140741741ed9916240d8d5.jpg)
+
+  那么图片命名可以是
+
+  `mkGu_000001d00f140741741ed9916240d8d5.jpg`
+
+  ### 为考虑各种情况，dddd_trainer不会自动去处理大小写问题，如果想训练大小写，则在样本标注时就需要自己标注好大小写，如上面例子
+- ### 为了新手更好的理解本部分的内容，本项目也提供了两套基础数据集提供测试
+
+  [数据集一](https://wwm.lanzoum.com/iUyYb0b5z3lg)
+  [数据集二](https://wwm.lanzoum.com/itczd0b5z3yj)
 - ### 5、修改配置文件
+
 ```yaml
 Model:
     CharSet: []     # 字符集，不要动，会自动生成
@@ -149,7 +112,8 @@ Train:
 
 
 ```
-配置文件位于本项目根目录下`projects/{project_name}/config.yaml`
+
+配置文件位于本项目根目录下 `projects/{project_name}/config.yaml`
 
 - ### 6、缓存数据
 
@@ -168,5 +132,5 @@ Train:
 `你们先训练着，我去适配ddddocr和ocr_api_server了，适配完我再继续更新文档`
 
 - ### 9、备注
-  
+
   1. ddddocr crnn网络结构来自 https://github.com/meijieru/crnn.pytorch.git
