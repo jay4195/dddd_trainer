@@ -24,7 +24,7 @@ Macos仅支持cpu训练
 
 [cudnn](https://developer.nvidia.com/zh-cn/cudnn)
 
-注意cudnn支持的cuda版本号要与你安装的cuda版本号对应，不同版本的cuda支持的显卡不一样，`<b>`20系无脑选择10.2版本cuda，30系无脑选择11.3版本cuda`</b>`,这里有啥问题就百度吧，算是一个基础问题。
+注意cudnn支持的cuda版本号要与你安装的cuda版本号对应，不同版本的cuda支持的显卡不一样，<b>20系无脑选择10.2版本cuda，30系无脑选择11.3版本cuda</b>,这里有啥问题就百度吧，算是一个基础问题。
 
 ## 2、训练部分
 
