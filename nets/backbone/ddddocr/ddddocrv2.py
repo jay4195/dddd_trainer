@@ -8,64 +8,59 @@ IMG_WIDTH = 160
 
 class DdddOcr(nn.Module):
     """
-    CNN Feature Extractor Backbone.
-    Based on the CRNN discussion for captcha recognition, but only provides the CNN part.
-    Outputs a feature map intended to be fed into a subsequent sequence model (like RNN).
-    Designed to be a potential replacement for the original DdddOcr class definition.
+    CNN Feature Extractor Backbone - Reduced Size (V1: Halved Channels).
+    Outputs a feature map intended to be fed into a subsequent sequence model.
     """
-    def __init__(self, nc=1, leakyRelu=False): # Default nc=1 for grayscale
+    def __init__(self, nc=1, leakyRelu=False):  # Default nc=1 for grayscale
         super(DdddOcr, self).__init__()
+
+        # Reduced channel counts
+        ch1, ch2, ch3, ch4 = 32, 64, 128, 256  # Halved from 64, 128, 256, 512
 
         self.cnn = nn.Sequential()
 
-        # Layer 1: Input (B, nc, 60, 160) -> Output (B, 64, 30, 80)
-        self.cnn.add_module('conv0', nn.Conv2d(nc, 64, kernel_size=3, stride=1, padding=1))
+        # Layer 1: Input (B, nc, 60, 160) -> Output (B, ch1, 30, 80)
+        self.cnn.add_module('conv0', nn.Conv2d(nc, ch1, kernel_size=3, stride=1, padding=1))
         if leakyRelu:
             self.cnn.add_module('relu0', nn.LeakyReLU(0.2, inplace=True))
         else:
             self.cnn.add_module('relu0', nn.ReLU(True))
-        self.cnn.add_module('pool0', nn.MaxPool2d(kernel_size=2, stride=2))
+        self.cnn.add_module('pool0', nn.MaxPool2d(kernel_size=2, stride=2))  # 60x160 -> 30x80
 
-        # Layer 2: Input (B, 64, 30, 80) -> Output (B, 128, 15, 40)
-        self.cnn.add_module('conv1', nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1))
+        # Layer 2: Input (B, ch1, 30, 80) -> Output (B, ch2, 15, 40)
+        self.cnn.add_module('conv1', nn.Conv2d(ch1, ch2, kernel_size=3, stride=1, padding=1))
         if leakyRelu:
             self.cnn.add_module('relu1', nn.LeakyReLU(0.2, inplace=True))
         else:
             self.cnn.add_module('relu1', nn.ReLU(True))
-        self.cnn.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))
+        self.cnn.add_module('pool1', nn.MaxPool2d(kernel_size=2, stride=2))  # 30x80 -> 15x40
 
-        # Layer 3: Input (B, 128, 15, 40) -> Output (B, 256, 7, 41)
-        self.cnn.add_module('conv2', nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1))
-        self.cnn.add_module('batchnorm2', nn.BatchNorm2d(256))
+        # Layer 3: Input (B, ch2, 15, 40) -> Output (B, ch3, 7, 41)
+        self.cnn.add_module('conv2', nn.Conv2d(ch2, ch3, kernel_size=3, stride=1, padding=1))
+        self.cnn.add_module('batchnorm2', nn.BatchNorm2d(ch3))
         if leakyRelu:
             self.cnn.add_module('relu2', nn.LeakyReLU(0.2, inplace=True))
         else:
             self.cnn.add_module('relu2', nn.ReLU(True))
-        # Asymmetric pooling: H=(15-2)/2+1=7, W=(40-1+2*1)/1+1=41
-        self.cnn.add_module('pool2', nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1)))
+        self.cnn.add_module('pool2', nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1)))  # 15x40 -> 7x41
 
-        # Layer 4: Input (B, 256, 7, 41) -> Output (B, 512, 3, 42)
-        self.cnn.add_module('conv3', nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1))
-        self.cnn.add_module('batchnorm3', nn.BatchNorm2d(512))
+        # Layer 4: Input (B, ch3, 7, 41) -> Output (B, ch4, 3, 42)
+        self.cnn.add_module('conv3', nn.Conv2d(ch3, ch4, kernel_size=3, stride=1, padding=1))
+        self.cnn.add_module('batchnorm3', nn.BatchNorm2d(ch4))
         if leakyRelu:
             self.cnn.add_module('relu3', nn.LeakyReLU(0.2, inplace=True))
         else:
             self.cnn.add_module('relu3', nn.ReLU(True))
-        # Asymmetric pooling: H=(7-2)/2+1=3, W=(41-1+2*1)/1+1=42
-        self.cnn.add_module('pool3', nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1)))
-
-        # NOTE: The output of this CNN is a feature map, e.g., (Batch, 512, 3, 42) for a (Batch, nc, 60, 160) input.
-        # This output needs to be reshaped and fed into an RNN/Transformer and a decoder in your downstream code.
+        self.cnn.add_module('pool3', nn.MaxPool2d(kernel_size=(2, 2), stride=(2, 1), padding=(0, 1)))  # 7x41 -> 3x42
 
     def forward(self, input):
         """
-        Passes the input image through the CNN layers.
+        Passes the input image through the reduced CNN layers.
         Args:
             input (Tensor): Input tensor of shape (Batch, nc, H, W)
         Returns:
-            Tensor: Output feature map from the CNN.
-                    Shape depends on input H, W. For (B, nc, 60, 160) input,
-                    output is approximately (B, 512, 3, 42).
+            Tensor: Output feature map. For (B, nc, 60, 160) input,
+                    output is approx (B, 256, 3, 42).
         """
         return self.cnn(input)
 
